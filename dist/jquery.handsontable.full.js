@@ -575,7 +575,11 @@ Handsontable.Core = function (rootElement, settings) {
             break;
           }
           if (self.getCellMeta(current.row, current.col).isWritable) {
-            setData.push([current.row, current.col, input[r][c]]);
+            var dataInp = input[r][c];
+			if(self.getCellMeta(current.row, current.col).dataType === 'number') {
+				dataInp = dataInp.replace('.', numeral.languageDecimalDelimeter())
+			}
+            setData.push([current.row, current.col, dataInp]);
           }
           current.col++;
           if (end && c === clen - 1) {
@@ -1310,7 +1314,7 @@ Handsontable.Core = function (rootElement, settings) {
 
         var cellProperties = self.getCellMeta(changes[i][0], datamap.propToCol(changes[i][1]));
         if (cellProperties.dataType === 'number' && typeof changes[i][3] === 'string') {
-          if (changes[i][3].length > 0 && /^[0-9\s]*[.]*[0-9]*$/.test(changes[i][3])) {
+          if (changes[i][3].length > 0 && /^[0-9\s]*[.]*[0-9]*$/.test(changes[i][3].replace(numeral.languageDecimalDelimeter(), '.'))) {
             changes[i][3] = numeral().unformat(changes[i][3] || '0'); //numeral cannot unformat empty string
           }
         }
@@ -3016,7 +3020,7 @@ HandsontableTextEditorClass.prototype.beginEditing = function (row, col, prop, u
   }
 
   if (useOriginalValue) {
-    this.TEXTAREA[0].value = Handsontable.helper.stringify(this.originalValue) + (suffix || '');
+    this.TEXTAREA[0].value = Handsontable.helper.stringify(this.originalValue).replace('.', numeral.languageDecimalDelimeter()) + (suffix || '');
   }
   else {
     this.TEXTAREA[0].value = '';
@@ -8091,6 +8095,10 @@ CopyPaste.prototype._bindEvent = (function () {
             symbol: '$'
         }
     });
+
+numeral.languageDecimalDelimeter = function() {
+	return languages[currentLanguage].delimiters.decimal;
+};
 
     numeral.zeroFormat = function (format) {
         if (typeof(format) === 'string') {
